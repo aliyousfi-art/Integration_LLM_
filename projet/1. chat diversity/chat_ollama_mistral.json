@@ -1,0 +1,94 @@
+{
+  "name": "1. Chat Ollama - mistral",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c3a1f2b4-8e5d-4f90-a3c7-12bd09e4f831",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [380, 400],
+      "webhookId": "f1a2b3c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "model": "mistral:latest",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "a7b8c9d0-e1f2-4a3b-c4d5-e6f7a8b9c0d1",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [600, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "MDmfZOAcLAFHSt1a",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [600, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Chat avec Ollama (Mistral local)\nCe workflow utilise Mistral en local via Ollama.\n**Avantages** : Gratuit, privé, pas de latence réseau.\n**Modèle** : mistral:latest (~4GB RAM requis)",
+        "height": 200,
+        "width": 340,
+        "color": 4
+      },
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-80, 80],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "chat1OllamaMist",
+  "tags": [
+    { "createdAt": "2024-12-15T10:00:00.000Z", "updatedAt": "2024-12-15T10:00:00.000Z", "id": "t1", "name": "etape-1" }
+  ]
+}

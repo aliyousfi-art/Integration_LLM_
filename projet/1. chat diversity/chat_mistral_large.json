@@ -1,0 +1,92 @@
+{
+  "name": "1. Chat Mistral - mistral-small-latest",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [380, 400],
+      "webhookId": "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "id": "d5e6f7a8-b9c0-4d1e-2f3a-4b5c6d7e8f9a",
+      "name": "Mistral Cloud Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "position": [600, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "MistralApiCred01",
+          "name": "Mistral API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [600, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Chat avec Mistral AI (Cloud)\nUtilise l'API cloud de Mistral.\n**Modèle** : mistral-small-latest (économique)\n💡 Excellent pour le français\n⚠️ Crédits gratuits disponibles à l'inscription",
+        "height": 220,
+        "width": 340,
+        "color": 5
+      },
+      "id": "f9a0b1c2-d3e4-4f5a-b6c7-d8e9f0a1b2c3",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-80, 80],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "chat1MistralSml",
+  "tags": [
+    { "createdAt": "2024-12-15T10:30:00.000Z", "updatedAt": "2024-12-15T10:30:00.000Z", "id": "t1", "name": "etape-1" }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "name": "1. Chat Gemini - gemini-pro",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [380, 400],
+      "webhookId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-pro",
+        "options": {}
+      },
+      "id": "f7a8b9c0-d1e2-4f3a-b4c5-d6e7f8a9b0c1",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [600, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GeminiApiCred01",
+          "name": "Gemini API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "a9b0c1d2-e3f4-4a5b-c6d7-e8f9a0b1c2d3",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [600, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Chat avec Google Gemini Pro\nUtilise l'API cloud de Google.\n**Quota gratuit** : 15 req/min, 1500 req/jour\n**Modèle** : gemini-pro (multimodal)\n⚠️ Nécessite une clé API Google AI Studio",
+        "height": 220,
+        "width": 340,
+        "color": 3
+      },
+      "id": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-80, 80],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "chat1GeminiPro1",
+  "tags": [
+    { "createdAt": "2024-12-15T10:15:00.000Z", "updatedAt": "2024-12-15T10:15:00.000Z", "id": "t1", "name": "etape-1" }
+  ]
+}

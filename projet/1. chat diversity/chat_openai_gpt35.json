@@ -1,0 +1,92 @@
+{
+  "name": "1. Chat OpenAI - gpt-3.5-turbo",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [380, 400],
+      "webhookId": "c4d5e6f7-a8b9-0c1d-2e3f-4a5b6c7d8e9f",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "model": "gpt-3.5-turbo",
+        "options": {}
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [600, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "OpenAIApiCred01",
+          "name": "OpenAI API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [600, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Chat avec OpenAI (GPT-3.5 Turbo)\nUtilise l'API d'OpenAI.\n**Modèle** : gpt-3.5-turbo (~$0.002/1k tokens)\n⚠️ Carte bancaire requise pour l'API\n💡 Configurez un budget max dans le dashboard OpenAI",
+        "height": 230,
+        "width": 340,
+        "color": 2
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-80, 80],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e4f5a6b7-c8d9-0e1f-2a3b-4c5d6e7f8a9b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "chat1OpenAIGPT3",
+  "tags": [
+    { "createdAt": "2024-12-15T11:00:00.000Z", "updatedAt": "2024-12-15T11:00:00.000Z", "id": "t1", "name": "etape-1" }
+  ]
+}
