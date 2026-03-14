@@ -1,0 +1,92 @@
+{
+  "name": "basic_mistral",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [300, 400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "id": "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+      "name": "Mistral Cloud Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "position": [540, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "MistralApiCred01",
+          "name": "Mistral API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}"
+      },
+      "id": "d9e0f1a2-b3c4-4d5e-6f7a-8b9c0d1e2f3a",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [540, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Sub-workflow : Mistral AI (Cloud)\nCe workflow est appelé par le workflow principal.\nUtilise mistral-small-latest via l'API Mistral.",
+        "height": 180,
+        "width": 320,
+        "color": 5
+      },
+      "id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-60, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e3f4a5b6-c7d8-9e0f-1a2b-3c4d5e6f7a8b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "split2BasicMstr",
+  "tags": [
+    { "createdAt": "2024-12-15T14:30:00.000Z", "updatedAt": "2024-12-15T14:30:00.000Z", "id": "t2", "name": "etape-2" }
+  ]
+}
