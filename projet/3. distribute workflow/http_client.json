@@ -1,0 +1,190 @@
+{
+  "name": "http_client",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [200, 500],
+      "webhookId": "ht-client-001",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/ollama",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "a4b5c6d7-e8f9-4a0b-1c2d-3e4f5a6b7c8d",
+      "name": "Call Ollama Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [480, 300],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/gemini",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "b6c7d8e9-f0a1-4b2c-3d4e-5f6a7b8c9d0e",
+      "name": "Call Gemini Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [480, 440],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/mistral",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "c8d9e0f1-a2b3-4c4d-5e6f-7a8b9c0d1e2f",
+      "name": "Call Mistral Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [480, 580],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/openai",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a",
+      "name": "Call OpenAI Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [480, 720],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "id": "e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "position": [760, 500],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const responses = $input.all();\nconst models = ['Ollama (Mistral)', 'Google Gemini', 'Mistral AI', 'OpenAI GPT-3.5'];\n\nlet combined = '📊 **Comparaison via webhooks HTTP**\\n\\n';\n\nresponses.forEach((item, i) => {\n  const modelName = models[i] || `Modèle ${i + 1}`;\n  const text = item.json?.text || item.json?.output || item.json?.response || JSON.stringify(item.json);\n  combined += `🤖 **${modelName}**:\\n${text}\\n\\n---\\n\\n`;\n});\n\nreturn [{ json: { combined } }];"
+      },
+      "id": "f4a5b6c7-d8e9-4f0a-1b2c-3d4e5f6a7b8c",
+      "name": "Format Responses",
+      "type": "n8n-nodes-base.code",
+      "position": [1040, 500],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## HTTP Client - Architecture distribuée\nCe workflow envoie des requêtes HTTP aux 4 webhooks LLM.\nChaque modèle tourne comme un service REST indépendant.\n\n💡 Peut être appelé depuis n'importe quel outil (Postman, Python, etc.)",
+        "height": 200,
+        "width": 400,
+        "color": 7
+      },
+      "id": "a6b7c8d9-e0f1-4a2b-3c4d-5e6f7a8b9c0d",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-120, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          { "node": "Call Ollama Webhook", "type": "main", "index": 0 },
+          { "node": "Call Gemini Webhook", "type": "main", "index": 0 },
+          { "node": "Call Mistral Webhook", "type": "main", "index": 0 },
+          { "node": "Call OpenAI Webhook", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Call Ollama Webhook": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 0 }]]
+    },
+    "Call Gemini Webhook": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 1 }]]
+    },
+    "Call Mistral Webhook": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 2 }]]
+    },
+    "Call OpenAI Webhook": {
+      "main": [[{ "node": "Merge Results", "type": "main", "index": 3 }]]
+    },
+    "Merge Results": {
+      "main": [[{ "node": "Format Responses", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7c8d9e0-f1a2-3b4c-5d6e-7f8a9b0c1d2e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "dist3HttpClient",
+  "tags": [
+    { "createdAt": "2024-12-16T10:00:00.000Z", "updatedAt": "2024-12-16T10:00:00.000Z", "id": "t3", "name": "etape-3" }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "name": "webhook_openai",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openai",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [300, 400],
+      "webhookId": "wh-openai-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-3.5-turbo",
+        "options": {}
+      },
+      "id": "b7c8d9e0-f1a2-4b3c-4d5e-6f7a8b9c0d1e",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [540, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "OpenAIApiCred01",
+          "name": "OpenAI API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [540, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Webhook OpenAI\n**URL** : POST /webhook/openai\n**Auth** : Basic Auth\n\nAccepte : `{ chatInput, temperature, question_id }`\nRetourne : réponse GPT-3.5-turbo",
+        "height": 200,
+        "width": 340,
+        "color": 2
+      },
+      "id": "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-60, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e0f1a2b3-c4d5-6e7f-8a9b-0c1d2e3f4a5b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "dist3WebhOpenAI",
+  "tags": [
+    { "createdAt": "2024-12-16T09:45:00.000Z", "updatedAt": "2024-12-16T09:45:00.000Z", "id": "t3", "name": "etape-3" }
+  ]
+}

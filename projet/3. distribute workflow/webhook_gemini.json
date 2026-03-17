@@ -1,0 +1,93 @@
+{
+  "name": "webhook_gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [300, 400],
+      "webhookId": "wh-gemini-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-pro",
+        "options": {}
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [540, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GeminiApiCred01",
+          "name": "Gemini API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [540, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Gemini\n**URL** : POST /webhook/gemini\n**Auth** : Basic Auth\n\nAccepte : `{ chatInput, temperature, question_id }`\nRetourne : réponse Gemini Pro",
+        "height": 200,
+        "width": 340,
+        "color": 3
+      },
+      "id": "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-60, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c8d9e0f1-a2b3-4c5d-6e7f-8a9b0c1d2e3f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "dist3WebhGemini",
+  "tags": [
+    { "createdAt": "2024-12-16T09:15:00.000Z", "updatedAt": "2024-12-16T09:15:00.000Z", "id": "t3", "name": "etape-3" }
+  ]
+}

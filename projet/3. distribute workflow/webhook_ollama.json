@@ -1,0 +1,95 @@
+{
+  "name": "webhook_ollama",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ollama",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [300, 400],
+      "webhookId": "wh-ollama-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "mistral:latest",
+        "options": {
+          "temperature": "={{ $json.body.temperature || 0.7 }}"
+        }
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [540, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "MDmfZOAcLAFHSt1a",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [540, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Ollama\n**URL** : POST /webhook/ollama\n**Auth** : Basic Auth\n\nAccepte : `{ chatInput, temperature, question_id }`\nRetourne : réponse du modèle mistral local",
+        "height": 200,
+        "width": 340,
+        "color": 4
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-60, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7c8d9e0-f1a2-3b4c-5d6e-7f8a9b0c1d2e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "dist3WebhOllama",
+  "tags": [
+    { "createdAt": "2024-12-16T09:00:00.000Z", "updatedAt": "2024-12-16T09:00:00.000Z", "id": "t3", "name": "etape-3" }
+  ]
+}
