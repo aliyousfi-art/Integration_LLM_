@@ -1,0 +1,227 @@
+{
+  "name": "form_client",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Comparateur de LLM",
+        "formDescription": "Comparez les réponses de différents modèles de langage sur la même question.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Votre question",
+              "fieldType": "textarea",
+              "fieldId": "question",
+              "requiredField": true,
+              "placeholder": "Ex: Explique-moi l'intelligence artificielle en termes simples"
+            },
+            {
+              "fieldLabel": "Température (créativité : 0 = factuel, 2 = créatif)",
+              "fieldType": "number",
+              "fieldId": "temperature",
+              "requiredField": false,
+              "defaultValue": "0.7"
+            },
+            {
+              "fieldLabel": "Longueur max réponse (tokens)",
+              "fieldType": "number",
+              "fieldId": "max_tokens",
+              "requiredField": false,
+              "defaultValue": "500"
+            },
+            {
+              "fieldLabel": "Instructions système (optionnel)",
+              "fieldType": "textarea",
+              "fieldId": "system_prompt",
+              "requiredField": false,
+              "placeholder": "Ex: Tu es un expert en pédagogie, explique de manière simple et illustrée."
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Comparer les modèles",
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "responseText": "✅ Comparaison terminée ! Résultats disponibles."
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [200, 500],
+      "webhookId": "form-client-001",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const formData = $input.first().json;\n\nconst payload = {\n  chatInput: formData.question,\n  temperature: parseFloat(formData.temperature) || 0.7,\n  max_tokens: parseInt(formData.max_tokens) || 500\n};\n\nif (formData.system_prompt && formData.system_prompt.trim()) {\n  payload.system_prompt = formData.system_prompt.trim();\n}\n\nreturn [{ json: payload }];"
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Prepare Payload",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 500],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/ollama",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\",\n  \"temperature\": {{ $json.temperature }},\n  \"max_tokens\": {{ $json.max_tokens }}\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Call Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 280],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/gemini",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\",\n  \"temperature\": {{ $json.temperature }},\n  \"max_tokens\": {{ $json.max_tokens }}\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Call Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 420],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/mistral",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\",\n  \"temperature\": {{ $json.temperature }},\n  \"max_tokens\": {{ $json.max_tokens }}\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "name": "Call Mistral",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 560],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/openai",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatInput\": \"{{ $json.chatInput }}\",\n  \"temperature\": {{ $json.temperature }},\n  \"max_tokens\": {{ $json.max_tokens }}\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Call OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 700],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [1000, 500],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const responses = $input.all();\nconst models = ['Ollama (Mistral local)', 'Google Gemini Pro', 'Mistral AI Small', 'OpenAI GPT-3.5'];\n\nconst results = responses.map((item, i) => ({\n  model: models[i] || `Modèle ${i+1}`,\n  response: item.json?.text || item.json?.output || item.json?.response || 'Pas de réponse'\n}));\n\nreturn [{ json: { results, total: results.length } }];"
+      },
+      "id": "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "position": [1260, 500],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Formulaire Comparateur LLM\nInterface formulaire avec paramètres configurables.\n\n**Champs** : question, température, max_tokens, system_prompt\n\n💡 Accédez au formulaire via \"Test URL\" du nœud Form Trigger",
+        "height": 200,
+        "width": 400,
+        "color": 6
+      },
+      "id": "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-120, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form Trigger": {
+      "main": [[{ "node": "Prepare Payload", "type": "main", "index": 0 }]]
+    },
+    "Prepare Payload": {
+      "main": [
+        [
+          { "node": "Call Ollama", "type": "main", "index": 0 },
+          { "node": "Call Gemini", "type": "main", "index": 0 },
+          { "node": "Call Mistral", "type": "main", "index": 0 },
+          { "node": "Call OpenAI", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Call Ollama": { "main": [[{ "node": "Merge", "type": "main", "index": 0 }]] },
+    "Call Gemini": { "main": [[{ "node": "Merge", "type": "main", "index": 1 }]] },
+    "Call Mistral": { "main": [[{ "node": "Merge", "type": "main", "index": 2 }]] },
+    "Call OpenAI":  { "main": [[{ "node": "Merge", "type": "main", "index": 3 }]] },
+    "Merge": { "main": [[{ "node": "Aggregate Results", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c8d9e0f1-a2b3-4c5d-6e7f-8a9b0c1d2e3f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "form4FormClient",
+  "tags": [
+    { "createdAt": "2024-12-16T14:00:00.000Z", "updatedAt": "2024-12-16T14:00:00.000Z", "id": "t4", "name": "etape-4" }
+  ]
+}
