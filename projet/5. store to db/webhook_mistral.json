@@ -1,0 +1,95 @@
+{
+  "name": "webhook_mistral",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mistral",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "webhookId": "wh-mistral-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "mistral-small-latest",
+        "options": {}
+      },
+      "id": "f3a4b5c6-d7e8-4f9a-0b1c-2d3e4f5a6b7c",
+      "name": "Mistral Cloud Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "position": [520, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "MistralApiCred01",
+          "name": "Mistral API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [520, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "reponse",
+        "columns": "reponse,provider,question_id",
+        "additionalFields": {}
+      },
+      "id": "b7c8d9e0-f1a2-4b3c-4d5e-6f7a8b9c0d1e",
+      "name": "Save Response to DB",
+      "type": "n8n-nodes-base.postgres",
+      "position": [800, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [[{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Chat LLM Chain": {
+      "main": [[{ "node": "Save Response to DB", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "db5WebhMistralD",
+  "tags": [{ "id": "t5", "name": "etape-5" }]
+}

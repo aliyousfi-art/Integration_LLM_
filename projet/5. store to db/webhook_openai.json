@@ -1,0 +1,95 @@
+{
+  "name": "webhook_openai",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openai",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "webhookId": "wh-openai-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-3.5-turbo",
+        "options": {}
+      },
+      "id": "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [520, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "OpenAIApiCred01",
+          "name": "OpenAI API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "e3f4a5b6-c7d8-4e9f-0a1b-2c3d4e5f6a7b",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [520, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "reponse",
+        "columns": "reponse,provider,question_id",
+        "additionalFields": {}
+      },
+      "id": "f5a6b7c8-d9e0-4f1a-2b3c-4d5e6f7a8b9c",
+      "name": "Save Response to DB",
+      "type": "n8n-nodes-base.postgres",
+      "position": [800, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Chat LLM Chain": {
+      "main": [[{ "node": "Save Response to DB", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "e2f3a4b5-c6d7-8e9f-0a1b-2c3d4e5f6a7b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "db5WebhOpenAIDB",
+  "tags": [{ "id": "t5", "name": "etape-5" }]
+}

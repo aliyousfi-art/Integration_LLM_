@@ -1,0 +1,112 @@
+{
+  "name": "webhook_gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "webhookId": "wh-gemini-001",
+      "typeVersion": 2,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "WebhookAuthCred1",
+          "name": "Webhook Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-pro",
+        "options": {}
+      },
+      "id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [520, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GeminiApiCred01",
+          "name": "Gemini API - Personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}"
+      },
+      "id": "b5c6d7e8-f9a0-4b1c-2d3e-4f5a6b7c8d9e",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [520, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "reponse",
+        "columns": "reponse,provider,question_id",
+        "additionalFields": {}
+      },
+      "id": "c7d8e9f0-a1b2-4c3d-4e5f-6a7b8c9d0e1f",
+      "name": "Save Response to DB",
+      "type": "n8n-nodes-base.postgres",
+      "position": [800, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Gemini + Sauvegarde DB\n1. Reçoit la question + question_id\n2. Interroge Gemini Pro\n3. Sauvegarde la réponse dans la table `reponse`\n\n**provider** = 'Gemini'",
+        "height": 200,
+        "width": 360,
+        "color": 3
+      },
+      "id": "d9e0f1a2-b3c4-4d5e-6f7a-8b9c0d1e2f3a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-60, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Chat LLM Chain", "type": "main", "index": 0 }]]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [[{ "node": "Chat LLM Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Chat LLM Chain": {
+      "main": [[{ "node": "Save Response to DB", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c0d1e2f3-a4b5-6c7d-8e9f-0a1b2c3d4e5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "db5WebhGeminiDB",
+  "tags": [
+    { "createdAt": "2024-12-17T09:45:00.000Z", "updatedAt": "2024-12-17T09:45:00.000Z", "id": "t5", "name": "etape-5" }
+  ]
+}
