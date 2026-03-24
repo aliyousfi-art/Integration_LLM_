@@ -1,0 +1,114 @@
+{
+  "name": "load_from_db",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "history",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Webhook GET /history",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "webhookId": "wh-history-001",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  q.id AS question_id,\n  q.question,\n  q.date,\n  q.temperature,\n  q.max_tokens,\n  r.id AS reponse_id,\n  r.reponse,\n  r.provider\nFROM question q\nLEFT JOIN reponse r ON q.id = r.question_id\nORDER BY q.date DESC, r.provider\nLIMIT 40;",
+        "options": {}
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Load Questions with Responses",
+      "type": "n8n-nodes-base.postgres",
+      "position": [500, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items || items.length === 0) {\n  return [{ json: { error: 'No data found', questions: [] } }];\n}\n\nconst questionMap = new Map();\n\nfor (const item of items) {\n  const data = item.json;\n  const questionId = data.question_id;\n\n  if (!questionMap.has(questionId)) {\n    questionMap.set(questionId, {\n      id: questionId,\n      question: data.question,\n      date: data.date,\n      temperature: data.temperature,\n      max_tokens: data.max_tokens,\n      responses: []\n    });\n  }\n\n  if (data.reponse && data.provider) {\n    questionMap.get(questionId).responses.push({\n      id: data.reponse_id,\n      provider: data.provider,\n      reponse: data.reponse\n    });\n  }\n}\n\nconst questions = Array.from(questionMap.values());\nreturn questions.map(q => ({ json: q }));"
+      },
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Group Responses by Question",
+      "type": "n8n-nodes-base.code",
+      "position": [760, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const questions = $input.all();\n\nlet html = `<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Historique Comparateur LLM</title>\n  <style>\n    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; }\n    h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }\n    .stats { background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; display: inline-block; }\n    .question-card { background: white; padding: 25px; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 5px solid #3498db; }\n    .question-text { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; }\n    .metadata { color: #7f8c8d; font-size: 13px; margin-bottom: 18px; }\n    .responses-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }\n    .response-card { padding: 15px; background: #f8f9fa; border-radius: 8px; border-top: 3px solid #e74c3c; }\n    .provider-badge { font-weight: bold; color: #e74c3c; font-size: 14px; margin-bottom: 8px; }\n    .response-text { color: #34495e; font-size: 14px; line-height: 1.6; }\n  </style>\n</head>\n<body>\n  <h1>📊 Historique du Comparateur LLM</h1>\n  <div class=\"stats\">Total : ${questions.length} question(s) analysée(s)</div>\n`;\n\nfor (const item of questions) {\n  const q = item.json;\n  const date = new Date(q.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });\n  html += `\n  <div class=\"question-card\">\n    <div class=\"question-text\">❓ ${q.question}</div>\n    <div class=\"metadata\">📅 ${date} &nbsp;|&nbsp; 🌡️ Température : ${q.temperature || 'N/A'} &nbsp;|&nbsp; 🔢 Max tokens : ${q.max_tokens || 'N/A'}</div>\n    <div class=\"responses-grid\">\n  `;\n\n  if (q.responses && q.responses.length > 0) {\n    for (const resp of q.responses) {\n      const excerpt = resp.reponse.length > 400 ? resp.reponse.substring(0, 400) + '...' : resp.reponse;\n      html += `\n      <div class=\"response-card\">\n        <div class=\"provider-badge\">🤖 ${resp.provider}</div>\n        <div class=\"response-text\">${excerpt}</div>\n      </div>\n      `;\n    }\n  } else {\n    html += `<p><em>Aucune réponse enregistrée pour cette question.</em></p>`;\n  }\n\n  html += `</div></div>`;\n}\n\nhtml += `</body></html>`;\n\nreturn [{ json: { html, count: questions.length } }];"
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Format HTML Dashboard",
+      "type": "n8n-nodes-base.code",
+      "position": [1020, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  COUNT(DISTINCT q.id) AS total_questions,\n  COUNT(r.id) AS total_responses,\n  COUNT(DISTINCT r.provider) AS unique_providers\nFROM question q\nLEFT JOIN reponse r ON q.id = r.question_id;",
+        "options": {}
+      },
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.postgres",
+      "position": [500, 620],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Dashboard historique\nAccédez à : GET /webhook/history\n\nRetourne une page HTML avec :\n- Toutes les questions (10 dernières)\n- Réponses de chaque provider\n- Statistiques globales\n\n💡 Utilisable comme endpoint REST par une app frontend",
+        "height": 220,
+        "width": 380,
+        "color": 6
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-100, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook GET /history": {
+      "main": [
+        [
+          { "node": "Load Questions with Responses", "type": "main", "index": 0 },
+          { "node": "Calculate Stats", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Load Questions with Responses": {
+      "main": [[{ "node": "Group Responses by Question", "type": "main", "index": 0 }]]
+    },
+    "Group Responses by Question": {
+      "main": [[{ "node": "Format HTML Dashboard", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "f3a4b5c6-d7e8-9f0a-1b2c-3d4e5f6a7b8c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "load6FromDbHist",
+  "tags": [{ "id": "t6", "name": "etape-6" }]
+}
