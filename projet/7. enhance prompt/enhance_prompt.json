@@ -1,0 +1,127 @@
+{
+  "name": "enhance_prompt",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Webhook POST /analyze",
+      "type": "n8n-nodes-base.webhook",
+      "position": [200, 400],
+      "webhookId": "wh-analyze-001",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  q.id AS question_id,\n  q.question,\n  q.date,\n  r.provider,\n  r.reponse\nFROM question q\nLEFT JOIN reponse r ON q.id = r.question_id\nWHERE q.id = {{ $json.body.question_id || '(SELECT id FROM question ORDER BY date DESC LIMIT 1)' }}\nORDER BY r.provider;",
+        "options": {}
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Load Question and Responses",
+      "type": "n8n-nodes-base.postgres",
+      "position": [460, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nif (!rows || rows.length === 0) {\n  throw new Error('Aucune donnée trouvée. Assurez-vous d\\'avoir soumis des questions à l\\'étape 5.');\n}\n\nconst question = rows[0].json.question;\nconst date = new Date(rows[0].json.date).toLocaleDateString('fr-FR');\n\nlet responsesText = '';\nfor (const row of rows) {\n  if (row.json.provider && row.json.reponse) {\n    responsesText += `\\n\\n### ${row.json.provider}\\n${row.json.reponse}`;\n  }\n}\n\nconst metaPrompt = `Tu es un expert en évaluation de modèles de langage.\nAnalyse les réponses suivantes de plusieurs LLMs à la même question et génère un rapport comparatif structuré en Markdown.\n\n## Question posée\n\"${question}\"\n(posée le ${date})\n\n## Réponses des modèles${responsesText}\n\n## Rapport demandé\nGénère un rapport Markdown avec les sections suivantes :\n1. **Résumé exécutif** : Quelle réponse est la meilleure globalement ?\n2. **Analyse par critère** :\n   - Précision factuelle\n   - Clarté et lisibilité\n   - Complétude\n   - Style et ton\n3. **Classement des modèles** (du meilleur au moins bon) avec justification\n4. **Recommandation** : Quel modèle utiliser pour ce type de question ?\n\nSois objectif, précis et concis.`;\n\nreturn [{ json: { metaPrompt, question, responseCount: rows.filter(r => r.json.provider).length } }];"
+      },
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Build Meta Prompt (RAG)",
+      "type": "n8n-nodes-base.code",
+      "position": [720, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "mistral:latest",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Meta LLM (Ollama Analyste)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [980, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "MDmfZOAcLAFHSt1a",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.metaPrompt }}"
+      },
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "name": "LLM Chain (Analyse)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [980, 400],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const analysis = $input.first().json;\nconst question = $('Build Meta Prompt (RAG)').first().json.question;\nconst now = new Date().toISOString();\n\nconst report = {\n  title: 'Rapport d\\'analyse comparative LLM',\n  generated_at: now,\n  question: question,\n  analysis: analysis.text || analysis.output || analysis.response,\n  metadata: {\n    analyzer: 'Ollama Mistral (Meta-LLM)',\n    method: 'RAG - Retrieval Augmented Generation'\n  }\n};\n\nreturn [{ json: report }];"
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Format Report",
+      "type": "n8n-nodes-base.code",
+      "position": [1240, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Enhance Prompt - Analyse RAG\nCe workflow implémente le pattern RAG :\n\n1. **Retrieve** : Charge la question + réponses depuis PostgreSQL\n2. **Augment** : Construit un méta-prompt avec le contexte\n3. **Generate** : Un LLM analyse et compare les réponses\n\n💡 Passer `question_id` dans le body pour analyser une question spécifique,\nou laisser vide pour analyser la dernière question.",
+        "height": 260,
+        "width": 440,
+        "color": 1
+      },
+      "id": "a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-140, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook POST /analyze": {
+      "main": [[{ "node": "Load Question and Responses", "type": "main", "index": 0 }]]
+    },
+    "Load Question and Responses": {
+      "main": [[{ "node": "Build Meta Prompt (RAG)", "type": "main", "index": 0 }]]
+    },
+    "Build Meta Prompt (RAG)": {
+      "main": [[{ "node": "LLM Chain (Analyse)", "type": "main", "index": 0 }]]
+    },
+    "Meta LLM (Ollama Analyste)": {
+      "ai_languageModel": [[{ "node": "LLM Chain (Analyse)", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "LLM Chain (Analyse)": {
+      "main": [[{ "node": "Format Report", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "b4c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "rag7EnhancePrompt",
+  "tags": [{ "id": "t7", "name": "etape-7" }]
+}
