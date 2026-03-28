@@ -1,0 +1,106 @@
+{
+  "name": "export_to_file",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "export",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Webhook POST /export",
+      "type": "n8n-nodes-base.webhook",
+      "position": [200, 400],
+      "webhookId": "wh-export-001",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  q.id AS question_id,\n  q.question,\n  TO_CHAR(q.date, 'YYYY-MM-DD HH24:MI') AS date,\n  q.temperature,\n  q.max_tokens,\n  r.provider,\n  r.reponse\nFROM question q\nLEFT JOIN reponse r ON q.id = r.question_id\nORDER BY q.date DESC, r.provider\nLIMIT 40;",
+        "options": {}
+      },
+      "id": "b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Load Data from DB",
+      "type": "n8n-nodes-base.postgres",
+      "position": [460, 400],
+      "typeVersion": 2.4,
+      "credentials": {
+        "postgres": {
+          "id": "PostgresCred001",
+          "name": "PostgreSQL - Comparateur LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst format = $('Webhook POST /export').first().json.body?.format || 'markdown';\nconst timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);\n\n// Regrouper par question\nconst questionMap = new Map();\nfor (const row of rows) {\n  const d = row.json;\n  if (!questionMap.has(d.question_id)) {\n    questionMap.set(d.question_id, { ...d, responses: [] });\n  }\n  if (d.provider && d.reponse) {\n    questionMap.get(d.question_id).responses.push({ provider: d.provider, reponse: d.reponse });\n  }\n}\nconst questions = Array.from(questionMap.values());\n\nlet content = '';\nlet filename = '';\nlet mimeType = '';\n\nif (format === 'csv') {\n  // Format CSV\n  filename = `comparateur_llm_${timestamp}.csv`;\n  mimeType = 'text/csv';\n  content = 'question_id,date,question,temperature,provider,reponse\\n';\n  for (const q of questions) {\n    for (const r of q.responses) {\n      const escapedQ = q.question.replace(/\"/g, '\"\"');\n      const escapedR = r.reponse.replace(/\"/g, '\"\"');\n      content += `${q.question_id},\"${q.date}\",\"${escapedQ}\",${q.temperature || ''},\"${r.provider}\",\"${escapedR}\"\\n`;\n    }\n  }\n} else if (format === 'json') {\n  // Format JSON\n  filename = `comparateur_llm_${timestamp}.json`;\n  mimeType = 'application/json';\n  content = JSON.stringify({ exported_at: new Date().toISOString(), total_questions: questions.length, data: questions }, null, 2);\n} else {\n  // Format Markdown (défaut)\n  filename = `rapport_llm_${timestamp}.md`;\n  mimeType = 'text/markdown';\n  content = `# Rapport Comparateur LLM\\n\\n`;\n  content += `**Généré le** : ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\\n`;\n  content += `**Total de questions** : ${questions.length}\\n\\n---\\n\\n`;\n\n  for (const q of questions) {\n    content += `## Question #${q.question_id}\\n\\n`;\n    content += `**Date** : ${q.date}\\n`;\n    content += `**Température** : ${q.temperature || 'N/A'} | **Max tokens** : ${q.max_tokens || 'N/A'}\\n\\n`;\n    content += `### ❓ ${q.question}\\n\\n`;\n\n    for (const r of q.responses) {\n      content += `#### 🤖 ${r.provider}\\n\\n${r.reponse}\\n\\n`;\n    }\n    content += `---\\n\\n`;\n  }\n}\n\nreturn [{ json: { content, filename, mimeType, format, questionCount: questions.length } }];"
+      },
+      "id": "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+      "name": "Format Content",
+      "type": "n8n-nodes-base.code",
+      "position": [720, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/exports/{{ $json.filename }}",
+        "dataPropertyName": "content"
+      },
+      "id": "d7e8f9a0-b1c2-4d3e-4f5a-6b7c8d9e0f1a",
+      "name": "Write File",
+      "type": "n8n-nodes-base.readWriteFile",
+      "position": [980, 400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Format Content').first().json;\nreturn [{ json: {\n  success: true,\n  message: `Fichier généré avec succès : ${data.filename}`,\n  filename: data.filename,\n  format: data.format,\n  question_count: data.questionCount,\n  path: `/files/exports/${data.filename}`\n} }];"
+      },
+      "id": "e9f0a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1240, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Export vers fichier\n**URL** : POST /webhook/export\n**Body** : `{ \"format\": \"markdown\" }` (ou \"csv\" ou \"json\")\n\n**Volumes Docker requis** :\n```\nvolumes:\n  - ./exports:/files/exports\n```\n\nLes fichiers sont générés dans /files/exports/",
+        "height": 240,
+        "width": 420,
+        "color": 6
+      },
+      "id": "f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-140, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook POST /export": {
+      "main": [[{ "node": "Load Data from DB", "type": "main", "index": 0 }]]
+    },
+    "Load Data from DB": {
+      "main": [[{ "node": "Format Content", "type": "main", "index": 0 }]]
+    },
+    "Format Content": {
+      "main": [[{ "node": "Write File", "type": "main", "index": 0 }]]
+    },
+    "Write File": {
+      "main": [[{ "node": "Build Response", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "c5d6e7f8-a9b0-1c2d-3e4f-5a6b7c8d9e0f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "export8ToFile01",
+  "tags": [{ "id": "t8", "name": "etape-8" }]
+}
