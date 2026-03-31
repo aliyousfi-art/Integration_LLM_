@@ -1,0 +1,158 @@
+{
+  "name": "security_guard",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "3f8a1d92-c74b-4e6f-b2a9-d5c8e7f03b1e",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [200, 400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst userInput = input.chatInput || input.question || '';\n\n// Patterns d'injection connus\nconst dangerousPatterns = [\n  /ignore\\s+(all\\s+)?previous\\s+instructions?/gi,\n  /ignore\\s+(all\\s+)?prior\\s+instructions?/gi,\n  /forget\\s+(all\\s+)?previous\\s+instructions?/gi,\n  /you\\s+are\\s+now\\s+/gi,\n  /disregard\\s+(all\\s+|your\\s+)?instructions?/gi,\n  /override\\s+(all\\s+)?instructions?/gi,\n  /jailbreak/gi,\n  /DAN\\s+mode/gi,\n  /act\\s+as\\s+(if\\s+)?you\\s+(are|were|have\\s+no)/gi,\n  /system\\s+prompt\\s*:/gi,\n  /print\\s+(your\\s+)?(system|original)\\s+prompt/gi,\n  /reveal\\s+(your\\s+)?(instructions?|prompt|system)/gi,\n  /<\\s*script[^>]*>/gi,\n  /javascript\\s*:/gi,\n  /\\beval\\s*\\(/gi\n];\n\nconst flags = [];\nfor (const pattern of dangerousPatterns) {\n  if (pattern.test(userInput)) {\n    flags.push(pattern.source);\n  }\n}\n\nconst lengthOk = userInput.length <= 2000;\nconst patternOk = flags.length === 0;\n\nreturn [{\n  json: {\n    original_input: userInput,\n    is_safe: patternOk && lengthOk,\n    flags_detected: flags,\n    length_ok: lengthOk,\n    char_count: userInput.length,\n    check_method: 'regex'\n  }\n}];"
+      },
+      "id": "7b2e9c41-f083-4d5a-a6e8-c1b4d7f29e50",
+      "name": "Regex Security Check",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "safe-check",
+              "leftValue": "={{ $json.is_safe }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e4a7f316-8c02-4b9d-d5e1-3f7a2b8c94d6",
+      "name": "Is Input Safe?",
+      "type": "n8n-nodes-base.if",
+      "position": [720, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "llama-guard3:latest",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "9d3c6e81-a504-4f2b-b7d9-e8c1f0a35b72",
+      "name": "Llama Guard3 (Analyse sémantique)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [980, 580],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "MDmfZOAcLAFHSt1a",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nTask: Check if there is unsafe content in the following user message.\n\n<BEGIN USER MESSAGE>\n{{ $('Regex Security Check').first().json.original_input }}\n<END USER MESSAGE>\n\nProvide your safety assessment for the message above:\n- First line must read 'safe' or 'unsafe'.\n- If unsafe, a second line must include a comma-separated list of violated categories.\n\n<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+      },
+      "id": "2c5f8b37-d691-4e0a-a3c7-f9b2e4d06c81",
+      "name": "LLM Guard Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [980, 380],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const guardResult = $input.first().json;\nconst guardText = (guardResult.text || guardResult.output || '').trim().toLowerCase();\nconst isSafe = guardText.startsWith('safe');\n\nreturn [{\n  json: {\n    is_safe: isSafe,\n    guard_response: guardText,\n    check_method: 'llama-guard3',\n    original_input: $('Regex Security Check').first().json.original_input\n  }\n}];"
+      },
+      "id": "6a1b4d70-e928-4c3f-f8a5-b3d7e2f51c09",
+      "name": "Parse Guard Result",
+      "type": "n8n-nodes-base.code",
+      "position": [1240, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input est sûr, on retourne avec le contexte de sécurité\nconst securityData = $input.first().json;\nreturn [{ json: {\n  validated_input: securityData.original_input,\n  security_checks: {\n    regex: true,\n    semantic: securityData.check_method === 'llama-guard3' ? securityData.is_safe : null\n  },\n  status: 'approved'\n} }];"
+      },
+      "id": "d8f2c059-7b13-4a6e-e1d4-9c5a8b3f70e2",
+      "name": "Input Approved",
+      "type": "n8n-nodes-base.code",
+      "position": [980, 240],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Regex Security Check').first().json;\nreturn [{ json: {\n  status: 'rejected',\n  reason: 'Prompt injection détectée ou contenu non autorisé',\n  flags: input.flags_detected,\n  length_ok: input.length_ok,\n  message: 'Votre message a été bloqué pour des raisons de sécurité. Merci de reformuler votre question.'\n} }];"
+      },
+      "id": "5e9a3c84-f160-4b7d-d2b8-7e4f1c06a539",
+      "name": "Input Rejected",
+      "type": "n8n-nodes-base.code",
+      "position": [980, 560],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Security Guard - Sous-workflow de sécurité\nDouble vérification de sécurité :\n\n**Couche 1** : Regex (patterns d'injection connus)\n**Couche 2** : Llama-Guard3 (analyse sémantique)\n\n⚠️ Nécessite `ollama pull llama-guard3` sur la machine Ollama\n\nRetourne : `{ validated_input, status: 'approved'|'rejected' }`",
+        "height": 260,
+        "width": 420,
+        "color": 1
+      },
+      "id": "b7d5e138-4092-4f8c-c6a3-1d9b2e7f40c5",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-140, 60],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Regex Security Check", "type": "main", "index": 0 }]]
+    },
+    "Regex Security Check": {
+      "main": [[{ "node": "Is Input Safe?", "type": "main", "index": 0 }]]
+    },
+    "Is Input Safe?": {
+      "main": [
+        [{ "node": "Input Approved", "type": "main", "index": 0 }],
+        [{ "node": "LLM Guard Chain", "type": "main", "index": 0 }]
+      ]
+    },
+    "Llama Guard3 (Analyse sémantique)": {
+      "ai_languageModel": [[{ "node": "LLM Guard Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "LLM Guard Chain": {
+      "main": [[{ "node": "Parse Guard Result", "type": "main", "index": 0 }]]
+    },
+    "Parse Guard Result": {
+      "main": [[{ "node": "Input Rejected", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "8f3b1e72-d409-4c5a-b6d8-e2f7a1c93b04",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bd7a46d65fcc771a043f55e2893fe57b481be550f7c0925bdea49a2a8845426"
+  },
+  "id": "Kp7mN2xQr4tLwZ9v",
+  "tags": [{ "id": "Xq3nR8sT1uV5wY7k", "name": "etape-9" }]
+}
