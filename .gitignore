@@ -1,0 +1,188 @@
+# Integration-LLM Course - Git Ignore File
+# ===========================================
+# This file ensures only course-related content is versioned,
+# excluding all documentation construction artifacts.
+
+# --- IDE & Editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Environment Variables (NEVER COMMIT) ---
+.env
+*/.env
+**/.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.example
+
+# --- Logs & Temporary Files ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.pid
+*.pid.lock
+*.seed
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+
+# --- Node.js ---
+node_modules/
+package-lock.json
+yarn.lock
+
+# --- Docker ---
+.dockerignore
+docker-compose.override.yml
+
+# --- Documentation Construction Artifacts (EXCLUDE) ---
+*.tmp.md
+*.draft.md
+*.working.md
+/build/
+/dist/
+/output/
+*.html
+*.pdf
+*.docx
+
+# --- Installation Artifacts (EXCLUDE) ---
+# Keep: installation/README.md
+# Keep: installation/docker-compose.yml
+# Exclude all other installation files
+/installation/n8n_files/*
+!/installation/n8n_files/.gitkeep
+/installation/*.json
+/installation/premier_workflow_files/*
+/installation/corrections/*
+
+# --- Resources Construction Files (EXCLUDE) ---
+# Keep: all /ressources/**/README.md
+# Exclude raw data and construction files
+/ressources/**/raw/
+/ressources/**/temp/
+/ressources/**/drafts/
+/ressources/**/notebooks/
+/ressources/**/data_manipulation/ohlcv_flattened/*
+/ressources/**/data_manipulation/preprocessed-datasets/*
+/ressources/**/webhook&requests/indicators/raw/*
+/ressources/**/webhook&requests/ohlcv/raw/*
+
+# --- Project Construction Files (EXCLUDE) ---
+# Keep: all /projet/**/README.md and workflow JSON files
+/projet/**/temp/
+/projet/**/drafts/
+/projet/**/workflow_exports/
+
+# --- Generated Content (EXCLUDE) ---
+/export/
+/files/output/*
+!/files/output/.gitkeep
+/data/reports/*
+!/data/reports/.gitkeep
+*.md5
+*.sha1
+*.sha256
+
+# --- Sensitive Data (EXCLUDE) ---
+*.pem
+*.key
+*.crt
+*.cer
+*.jks
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+
+# --- Large Files (EXCLUDE) ---
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.dmg
+*.iso
+
+# --- Course Content to KEEP (EXPLICITLY INCLUDE) ---
+# Documentation files
+!**/README.md
+!**/*.md
+
+# Configuration files
+!**/docker-compose*.yml
+!**/*.example
+
+# Images used in documentation
+!**/*.png
+!**/*.jpg
+!**/*.jpeg
+!**/*.gif
+!**/*.svg
+
+# Mermaid diagrams
+!**/*.mmd
+
+# Course structure files
+!ARCHITECTURE.md
+!SYLLABUS.md
+!GUIDE_MERMAID.md
+!AMELIORATIONS_APPLIQUEES.md
+!CHANGELOG.md
+!GLOSSARY.md
+
+# Installation essentials
+!/installation/README.md
+!/installation/docker-compose.yml
+!/installation/premier_workflow.md
+!/installation/ollama_gpu.md
+
+# Sample data used in examples
+!/ressources/**/daily_series_flat/*.csv
+!/ressources/**/data_manipulation/*.csv  # Only sample CSV files
+!/ressources/**/webhook&requests/indicators/*.json  # Sample JSON files
+!/ressources/**/webhook&requests/ohlcv/*.json  # Sample JSON files
+
+# Project sample files
+!/projet/**/example*.*
+!/projet/**/sample*.*
+!/projet/**/template*.*
+
+# --- Final Verification ---
+# This .gitignore preserves:
+# ✅ All course documentation (.md files)
+# ✅ All images used in documentation
+# ✅ Docker configuration files
+# ✅ Sample data used in examples
+# ✅ Course structure files
+# ✅ Installation guides
+# ❌ Excludes all construction artifacts
+# ❌ Excludes sensitive data
+# ❌ Excludes temporary files
+# ❌ Excludes large binary files
